@@ -1,0 +1,4 @@
+Pillow>=9.0.0; python_version <= "3.12.0"
+numpy>=1.23.0; python_version <= "3.12.0"
+coremltools>=6.0.0; python_version <= "3.12.0"
+onnxruntime>=1.15.0; python_version <= "3.12.0"

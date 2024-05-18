@@ -1,0 +1,77 @@
+name: Python Package
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: install dependencies
+        run: |
+          make
+          python -m pip install --upgrade pip
+          pip install -U flake8 pytest isort black pylint
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: run format
+        run: make format
+  
+      - name: run lint
+        run: make lint
+  
+      - name: pytest tests
+        run: pytest tests
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: install dependencies
+        run: |
+          make
+          python -m pip install --upgrade pip
+          pip install hatch
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: set up pip cache
+        if: runner.os == 'Linux'
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('pyproject.toml') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: cache hatch
+        id: cache-hatch
+        uses: actions/cache@v3
+        with:
+          path: /home/runner/.local/share/hatch/env/virtual/
+          key: ${{ runner.os }}-hatch
+
+      - name: hatch build
+        run: hatch build
+
+      # Update this yml file to run pytest after build and test steps

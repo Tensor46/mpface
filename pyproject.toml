@@ -1,0 +1,220 @@
+[build-system]
+requires = ["hatchling", "hatch-requirements-txt"]
+build-backend = "hatchling.build"
+
+
+
+[project]
+name = "mpface"
+dynamic = ["click", "dependencies", "version"]
+description = 'Still figuring.'
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+keywords = ["test"]
+authors = [
+  { name = "Tensor46", email = "vikas11187@gmail.com" },
+]
+classifiers = [
+  "Development Status :: 1 - Planning",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: Implementation :: CPython",
+  "Programming Language :: Python :: Implementation :: PyPy",
+]
+
+[project.urls]
+Documentation = "https://github.com/Tensor46/mpface#readme"
+Issues = "https://github.com/Tensor46/mpface/issues"
+Source = "https://github.com/Tensor46/mpface"
+Changelog = "https://github.com/Tensor46/mpface/blob/main/CHANGELOG.md"
+
+[project.entry-points.pytest11]
+mpface = "mpface"
+
+
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-p no:mpface"
+testpaths = ["tests"]
+
+
+
+[tool.hatch.build]
+sources = ["src"]
+
+[tool.hatch.version]
+path = "src/mpface/__init__.py"
+
+[tool.hatch.metadata.hooks.requirements_txt]
+files = ["requirements.txt"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.envs.default]
+python = "3.12"
+dependencies = [
+  "coverage[toml]>=6.5",
+  "pytest",
+  "pytest-watch",
+  "textual-dev",
+  "types-peewee"
+]
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = ["- coverage combine", "coverage report"]
+cov = ["test-cov", "cov-report"]
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.lint]
+extra-dependencies = ["mypy>=1.0.0", "ruff>=0.1.6"]
+[tool.hatch.envs.lint.scripts]
+typing = "mypy --install-types --non-interactive {args:src/mpface tests}"
+style = [
+  "ruff {args:.}",
+  "ruff format {args:.}",
+]
+fmt = [
+  "ruff {args:.}",
+  "ruff --fix {args:.}",
+  "style",
+]
+all = [
+  "style",
+  "typing",
+]
+
+
+
+[tool.ruff]
+target-version = "py38"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F"]
+ignore = [
+  "B027",  # Allow non-abstract empty methods in abstract base classes
+  "FBT003",  # Allow boolean positional values in function calls, like `dict.get(... True)`
+  "S105", "S106", "S107",  # Ignore checks for possible passwords
+  "C901", "PLR0911", "PLR0912", "PLR0913", "PLR0915",  # Ignore complexity
+]
+unfixable = [
+  "F401",  # Don't touch unused imports
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["src", "tests"]
+
+[tool.ruff.lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[tool.ruff.lint.pep8-naming]
+ignore-names = ["A", "U", "V", "S", "T"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can use magic values, assertions, and relative imports
+"tests/**/*" = ["PLR2004", "S101", "TID252"]
+
+
+
+[tool.coverage.run]
+source_pkgs = ["src", "tests"]
+branch = true
+parallel = true
+omit = ["src/mpface/__about__.py"]
+
+[tool.coverage.paths]
+mpface = ["src/mpface", "*/mpface/src/mpface"]
+tests = ["tests", "*/mpface/tests"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
+]
+
+
+
+[tool.black]
+line-length = 120
+extend-exclude = "/(|venv|build|.eggs|.cache|dist)/"
+
+
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+src_paths = ["src", "tests"]
+
+
+
+[tool.flake8]
+max-line-length = 120
+extend-ignore = "E203"
+max-complexity = 25
+doctests = true
+statistics = true
+count = true
+
+
+
+[tool.pylint]
+jobs = 0
+py-version = 3.9
+load-plugins = [
+  "pylint.extensions.broad_try_clause",
+  "pylint.extensions.check_elif",
+  "pylint.extensions.code_style",
+  "pylint.extensions.confusing_elif",
+  "pylint.extensions.empty_comment",
+  "pylint.extensions.mccabe",
+  "pylint.extensions.overlapping_exceptions",
+  "pylint.extensions.redefined_variable_type",
+  "pylint.extensions.typing",
+]
+disable = [
+  "bad-inline-option",
+  "broad-exception-caught",
+  "broad-exception-raised",
+  "consider-using-assignment-expr",
+  "deprecated-pragma",
+  "duplicate-code",
+  "file-ignored",
+  "locally-disabled",
+  "missing-module-docstring",
+  "no-member",
+  "raise-missing-from",
+  "raw-checker-failed",
+  "suppressed-message",
+  "too-few-public-methods",
+  "too-many-instance-attributes",
+  "use-symbolic-message-instead",
+  "useless-suppression",
+]
+
+[tool.pylint.basic]
+good-names = [
+  "A", "T",
+  "U", "S", "V",
+]
+
+[tool.pylint.format]
+max-line-length = 120
+max-module-lines = 1000
+
+[tool.pylint.broad_try_clause]
+max-try-statements = 6
+
+[tool.pylint.typecheck]
+generated-members = ["numpy.*", "np.*"]
