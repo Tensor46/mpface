@@ -11,6 +11,7 @@ from PIL import Image as ImPIL
 
 from .base_predictor import ImagePredictor
 from .face import Face
+from .utils import nms_numba
 
 
 class Detector(ImagePredictor):
@@ -64,36 +65,12 @@ class Detector(ImagePredictor):
         kwgs = {key: val[sort] for key, val in kwgs.items()}
         kwgs["boxes"] /= scale
         kwgs["landmarks"] /= scale
-        valid = self.nms(kwgs["boxes"], kwgs["scores"])
+        valid = nms_numba(kwgs["boxes"], kwgs["scores"], self.threshold_iou)
         kwgs = {key: val[valid] for key, val in kwgs.items()}
         faces = []
         for confidence, box, landmarks in zip(kwgs["scores"], kwgs["boxes"], kwgs["landmarks"]):
             faces.append(Face(confidence.item(), box, landmarks))
         return {"faces": faces}
-
-    def nms(self, boxes: np.ndarray, scores: np.ndarray):
-        """Non maximal suppression."""
-        if boxes.shape[0] == 0:
-            return []
-
-        w = boxes[:, 2] - boxes[:, 0] + 1
-        h = boxes[:, 3] - boxes[:, 1] + 1
-        areas = w * h
-
-        retain: list[int] = []
-        order = np.arange(scores.size)
-        while order.size > 0:
-            index = order[0]
-            retain.append(index)
-            x1 = np.maximum(boxes[index, 0], boxes[order[1:], 0])
-            x2 = np.maximum(boxes[index, 2], boxes[order[1:], 2])
-            y1 = np.maximum(boxes[index, 1], boxes[order[1:], 1])
-            y2 = np.maximum(boxes[index, 3], boxes[order[1:], 3])
-
-            intersection = np.maximum(0, x2 - x1 + 1) * np.maximum(0, y2 - y1 + 1)
-            iou = intersection / (areas[index] + areas[order[1:]] - intersection)
-            order = order[np.concatenate(([False], iou <= self.threshold_iou))]
-        return retain
 
     def failure_to_predict(self) -> Any:
         """Default failure."""
